@@ -1,0 +1,167 @@
+.container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1e293b;
+  display: flex;
+  flex-direction: column;
+}
+
+.topBar {
+  background-color: #1e3a8a;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 64px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.logo h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.topNav {
+  display: flex;
+  height: 100%;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  padding: 0 1.25rem;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+  border-bottom: 3px solid transparent;
+}
+
+.navItem:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.navItem.active {
+  color: white;
+  border-bottom: 3px solid #60a5fa;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+}
+
+.userAvatar {
+  width: 32px;
+  height: 32px;
+  background-color: #f1f5f9;
+  color: #1e3a8a;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 3rem 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.pageHeader {
+  margin-bottom: 2rem;
+}
+
+.pageHeader h1 {
+  font-size: 1.875rem;
+  color: #0f172a;
+  margin: 0 0 0.5rem 0;
+}
+
+.pageHeader p {
+  color: #475569;
+  margin: 0;
+}
+
+.boardContainer {
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.dataTable th,
+.dataTable td {
+  padding: 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dataTable th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+  padding: 1rem;
+}
+
+.dataTable td {
+  position: relative;
+}
+
+.dataTable td.readOnly {
+  padding: 1rem;
+}
+
+.inlineInput {
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  color: #0f172a;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.inlineInput:hover {
+  background-color: #f1f5f9;
+}
+
+.inlineInput:focus {
+  background-color: #eff6ff;
+  box-shadow: inset 0 0 0 2px #3b82f6;
+}
+
+/* Hide number input spinners */
+.inlineInput::-webkit-outer-spin-button,
+.inlineInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.inlineInput[type=number] {
+  -moz-appearance: textfield;
+}
+
+.finalGrade {
+  font-weight: 600;
+  color: #1e3a8a;
+  padding: 1rem;
+  display: block;
+}
