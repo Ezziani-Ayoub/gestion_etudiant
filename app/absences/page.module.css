@@ -140,14 +140,6 @@
   margin: 0 0 1.5rem 0;
 }
 
-/* DASHBOARD GRID */
-.dashboardGrid {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 1.5rem;
-  align-items: start;
-}
-
 .panel {
   background-color: #ffffff;
   border: 1px solid #e5e7eb;
@@ -156,41 +148,21 @@
 }
 
 .panelHeader {
-  padding: 1rem 1.5rem;
+  padding: 1.5rem;
   border-bottom: 1px solid #e5e7eb;
   background-color: #f9fafb;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
-.panelHeader h3 {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #4b5563;
-}
-
-.primaryBtn {
-  background-color: #111827;
-  color: #ffffff;
-  border: none;
-  padding: 0.35rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 600;
+.dateSelect {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
-  cursor: pointer;
-}
-
-.primaryBtn:hover {
-  background-color: #374151;
-}
-
-.primaryBtn:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
+  font-size: 0.875rem;
+  color: #111827;
+  min-width: 200px;
 }
 
 /* TABLES */
@@ -203,41 +175,64 @@
 
 .dataTable th,
 .dataTable td {
-  padding: 0.75rem 1.5rem;
+  padding: 0;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .dataTable th {
   font-weight: 600;
   color: #6b7280;
-  background-color: #ffffff;
+  background-color: #f9fafb;
   position: sticky;
   top: 0;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
 }
 
 .dataTable tr:last-child td {
   border-bottom: none;
 }
 
-.inlineInput {
+.readOnly {
+  padding: 0.75rem 1.5rem;
+  color: #6b7280;
+}
+
+.statusSelect {
   width: 100%;
-  border: 1px solid transparent;
+  height: 100%;
+  border: none;
   background: transparent;
   font-family: inherit;
   font-size: inherit;
-  color: inherit;
+  padding: 0.75rem 1.5rem;
+  box-sizing: border-box;
+  cursor: pointer;
   outline: none;
-  padding: 0.25rem;
-  border-radius: 3px;
 }
 
-.inlineInput:focus {
-  border: 1px solid #d1d5db;
-  background-color: #f9fafb;
+.statusSelect:focus {
+  background-color: #f3f4f6;
 }
 
-.inlineInput::placeholder {
-  color: #9ca3af;
+.statusPresent {
+  color: #059669;
+  font-weight: 600;
+}
+
+.statusAbsent {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.statusLate {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.statusExcused {
+  color: #4f46e5;
+  font-weight: 600;
 }
 
 .loadingState {
