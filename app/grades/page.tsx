@@ -1,17 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import styles from "./page.module.css";
 import Link from "next/link";
+import styles from "./page.module.css";
 import { db } from "../../lib/firebase";
 import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
 
+interface Student {
+  id: number | string;
+  dbId: string;
+  name: string;
+  control?: string;
+  exam?: string;
+}
+
 export default function GradesPage() {
-  const userName = "Teacher User";
+  const userName = "Professeur";
 
   const [selectedClass, setSelectedClass] = useState<"G4" | "G6" | "G8">("G4");
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -19,9 +28,8 @@ export default function GradesPage() {
       try {
         const studentsRef = collection(db, `classes/${selectedClass}/students`);
         const studentsSnap = await getDocs(studentsRef);
-        const studentsList = studentsSnap.docs.map(d => ({ dbId: d.id, ...(d.data() as any) }));
+        const studentsList = studentsSnap.docs.map(d => ({ dbId: d.id, ...(d.data() as Omit<Student, "dbId">) })) as Student[];
         
-        // Sort students by numeric ID
         studentsList.sort((a, b) => Number(a.id) - Number(b.id));
         setStudents(studentsList);
       } catch (error) {
@@ -33,144 +41,163 @@ export default function GradesPage() {
     fetchStudents();
   }, [selectedClass]);
 
-  const handleGradeChange = async (dbId: string, field: "control" | "exam", value: string) => {
-    // Optimistic UI update
-    setStudents((prev) =>
-      prev.map((student) =>
-        student.dbId === dbId ? { ...student, [field]: value } : student
-      )
-    );
-
-    // Save to Firestore
-    try {
-      const studentRef = doc(db, `classes/${selectedClass}/students`, dbId);
-      await updateDoc(studentRef, {
-        [field]: value
-      });
-    } catch (error) {
-      console.error("Error updating grade:", error);
-    }
+  const handleGradeChange = (dbId: string, field: "control" | "exam", value: string) => {
+    setStudents(prev => prev.map(student => {
+      if (student.dbId === dbId) {
+        return { ...student, [field]: value };
+      }
+      return student;
+    }));
   };
 
-  // Calculate final grade
-  const calculateFinal = (control: string, exam: string) => {
-    const c = parseFloat(control);
-    const e = parseFloat(exam);
-    if (isNaN(c) || isNaN(e)) return null;
+  const handleGradeBlur = async (student: Student) => {
+    setSavingId(student.dbId);
+    try {
+      await updateDoc(doc(db, `classes/${selectedClass}/students`, student.dbId), {
+        control: student.control,
+        exam: student.exam
+      });
+    } catch (error) {
+      console.error("Error updating grades:", error);
+    }
+    setSavingId(null);
+  };
+
+  const calculateAverage = (controlStr?: string, examStr?: string) => {
+    const control = parseFloat(controlStr || "");
+    const exam = parseFloat(examStr || "");
     
-    // 25% Control + 75% Exam
-    return (c * 0.25) + (e * 0.75);
+    if (isNaN(control) && isNaN(exam)) return "--";
+    if (isNaN(control)) return exam.toFixed(2);
+    if (isNaN(exam)) return control.toFixed(2);
+
+    const avg = (control * 0.4) + (exam * 0.6);
+    return avg.toFixed(2);
   };
 
   return (
-    <div className={styles.container}>
-      {/* Top Navigation Bar */}
-      <header className={styles.topBar}>
-        <div className={styles.logo}>
-          <h2>Gestion Étudiant</h2>
+    <div className={styles.layoutContainer}>
+      {/* LEFT SIDEBAR */}
+      <aside className={styles.sidebar}>
+        <div className={styles.sidebarHeader}>
+          <h2>Gestion Académique</h2>
         </div>
-        
-        <nav className={styles.topNav}>
-          <Link href="/" className={styles.navItem}>Home</Link>
-          <Link href="/grades" className={`${styles.navItem} ${styles.active}`}>Grades</Link>
-          <a href="#" className={styles.navItem}>Lessons</a>
-          <a href="#" className={styles.navItem}>Assignments</a>
-          <a href="#" className={styles.navItem}>Absences</a>
+        <nav className={styles.sidebarNav}>
+          <Link href="/" className={styles.navItem}>Tableau de bord</Link>
+          <Link href="/grades" className={`${styles.navItem} ${styles.active}`}>Registre des Notes</Link>
+          <Link href="/lessons" className={styles.navItem}>Leçons et Devoirs</Link>
+          <Link href="/absences" className={styles.navItem}>Suivi des Absences</Link>
         </nav>
-
-        <div className={styles.userInfo}>
-          <span className={styles.userAvatar}>{userName.charAt(0)}</span>
-          <span>{userName} (Maths)</span>
+        <div className={styles.sidebarFooter}>
+          <div className={styles.userAvatar}>{userName.charAt(0)}</div>
+          <div>
+            <div style={{ fontWeight: 600 }}>{userName}</div>
+            <div style={{ color: "#9ca3af", fontSize: "0.75rem" }}>Département Mathématiques</div>
+          </div>
         </div>
-      </header>
+      </aside>
 
-      {/* Main Content Area */}
-      <main className={styles.mainContent}>
-        <div className={styles.pageHeader}>
-          <h1>Gestion des Notes (Grades)</h1>
-          <p>Sélectionnez une classe et cliquez dans les cases pour insérer ou modifier les notes. La moyenne se calcule et s'enregistre automatiquement.</p>
-        </div>
+      {/* MAIN CONTENT WRAPPER */}
+      <div className={styles.mainWrapper}>
         
-        {/* Class Selector for Grades */}
-        <div style={{ marginBottom: "2rem", display: "flex", gap: "1rem", alignItems: "center", backgroundColor: "white", padding: "1.5rem", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-          <label htmlFor="classSelect" style={{ fontWeight: 600 }}>Sélectionnez une classe :</label>
-          <select 
-            id="classSelect" 
-            value={selectedClass} 
-            onChange={(e) => setSelectedClass(e.target.value as "G4" | "G6" | "G8")}
-            style={{ padding: "0.5rem 1rem", borderRadius: "6px", border: "1px solid #cbd5e1", outline: "none" }}
-          >
-            <option value="G4">Classe G4</option>
-            <option value="G6">Classe G6</option>
-            <option value="G8">Classe G8</option>
-          </select>
-        </div>
-
-        {loading ? (
-          <div style={{ padding: "2rem", textAlign: "center", color: "#64748b" }}>
-            Chargement des notes depuis Firebase...
+        {/* TOP HEADER - TABS */}
+        <header className={styles.topHeader}>
+          <div className={styles.classTabs}>
+            <button 
+              className={`${styles.classTab} ${selectedClass === "G4" ? styles.activeTab : ""}`}
+              onClick={() => setSelectedClass("G4")}
+            >
+              Classe G4
+            </button>
+            <button 
+              className={`${styles.classTab} ${selectedClass === "G6" ? styles.activeTab : ""}`}
+              onClick={() => setSelectedClass("G6")}
+            >
+              Classe G6
+            </button>
+            <button 
+              className={`${styles.classTab} ${selectedClass === "G8" ? styles.activeTab : ""}`}
+              onClick={() => setSelectedClass("G8")}
+            >
+              Classe G8
+            </button>
           </div>
-        ) : (
-          <div className={styles.boardContainer} style={{ maxHeight: "60vh", overflowY: "auto" }}>
-            <table className={styles.dataTable}>
-              <thead style={{ position: "sticky", top: 0, backgroundColor: "#f8fafc", zIndex: 10, boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
-                <tr>
-                  <th>ID</th>
-                  <th>Nom de l'étudiant</th>
-                  <th>Note Contrôle (25%)</th>
-                  <th>Note Examen (75%)</th>
-                  <th>Moyenne Finale</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student) => {
-                  const final = calculateFinal(student.control, student.exam);
-                  let finalColor = "#64748b"; // default grey if null
-                  if (final !== null) {
-                    finalColor = final >= 10 ? "#16a34a" : "#dc2626"; // green or red
-                  }
+        </header>
 
-                  return (
-                    <tr key={student.dbId}>
-                      <td className={styles.readOnly}>#{student.id}</td>
-                      <td className={styles.readOnly} style={{ fontWeight: 500 }}>{student.name}</td>
-                      <td>
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          step="0.25"
-                          className={styles.inlineInput}
-                          value={student.control}
-                          onChange={(e) => handleGradeChange(student.dbId, "control", e.target.value)}
-                          placeholder="--"
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          step="0.25"
-                          className={styles.inlineInput}
-                          value={student.exam}
-                          onChange={(e) => handleGradeChange(student.dbId, "exam", e.target.value)}
-                          placeholder="--"
-                        />
-                      </td>
-                      <td>
-                        <span className={styles.finalGrade} style={{ color: finalColor, fontWeight: "bold" }}>
-                          {final !== null ? final.toFixed(2) : "--"}
-                        </span>
-                      </td>
+        {/* CONTENT BODY */}
+        <main className={styles.contentBody}>
+          <h1 className={styles.pageTitle}>Registre des Notes : Classe {selectedClass}</h1>
+
+          {loading ? (
+            <div className={styles.loadingState}>Chargement du registre...</div>
+          ) : (
+            <div className={styles.panel}>
+              <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
+                <table className={styles.dataTable}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "80px" }}>ID</th>
+                      <th>Étudiant</th>
+                      <th style={{ width: "15%" }}>Contrôle Continu</th>
+                      <th style={{ width: "15%" }}>Examen Final</th>
+                      <th style={{ width: "15%" }}>Moyenne Générale</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </main>
+                  </thead>
+                  <tbody>
+                    {students.map((student) => {
+                      const avg = calculateAverage(student.control, student.exam);
+                      const avgNum = parseFloat(avg as string);
+                      
+                      let avgColor = "#111827";
+                      if (!isNaN(avgNum)) {
+                        avgColor = avgNum >= 10 ? "#059669" : "#dc2626";
+                      }
+
+                      return (
+                        <tr key={student.dbId}>
+                          <td className={styles.readOnly} style={{ color: "#6b7280" }}>#{student.id}</td>
+                          <td className={styles.readOnly} style={{ fontWeight: 500 }}>{student.name}</td>
+                          <td>
+                            <input
+                              type="number"
+                              min="0"
+                              max="20"
+                              step="0.25"
+                              value={student.control || ""}
+                              onChange={(e) => handleGradeChange(student.dbId, "control", e.target.value)}
+                              onBlur={() => handleGradeBlur(student)}
+                              className={styles.inlineInput}
+                              placeholder="--"
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              min="0"
+                              max="20"
+                              step="0.25"
+                              value={student.exam || ""}
+                              onChange={(e) => handleGradeChange(student.dbId, "exam", e.target.value)}
+                              onBlur={() => handleGradeBlur(student)}
+                              className={styles.inlineInput}
+                              placeholder="--"
+                            />
+                          </td>
+                          <td>
+                            <span className={styles.finalGrade} style={{ color: avgColor }}>
+                              {avg} {avg !== "--" && "/ 20"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
