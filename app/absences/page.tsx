@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
+import DashboardLayout from "../../components/DashboardLayout";
 import { db } from "../../lib/firebase";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 
@@ -31,6 +32,7 @@ export default function AbsencesPage() {
   const [validDates, setValidDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [attendanceRecords, setAttendanceRecords] = useState<Record<string, string>>({});
+  const [justifiedRecords, setJustifiedRecords] = useState<Record<string, boolean>>({});
   
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -96,8 +98,10 @@ export default function AbsencesPage() {
         const attSnap = await getDoc(attRef);
         if (attSnap.exists()) {
           setAttendanceRecords(attSnap.data().records || {});
+          setJustifiedRecords(attSnap.data().justified || {});
         } else {
           setAttendanceRecords({});
+          setJustifiedRecords({});
         }
       } catch (error) {
         console.error("Error fetching attendance:", error);
@@ -137,38 +141,14 @@ export default function AbsencesPage() {
       case "Présent": return styles.statusPresent;
       case "Absent": return styles.statusAbsent;
       case "En Retard": return styles.statusLate;
-      case "Justifié": return styles.statusExcused;
       default: return "";
     }
   };
 
   return (
-    <div className={styles.layoutContainer}>
-      {/* LEFT SIDEBAR */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <h2>Gestion Académique</h2>
-        </div>
-        <nav className={styles.sidebarNav}>
-          <Link href="/" className={styles.navItem}>Tableau de bord</Link>
-          <Link href="/grades" className={styles.navItem}>Registre des Notes</Link>
-          <Link href="/lessons" className={styles.navItem}>Leçons et Devoirs</Link>
-          <Link href="/absences" className={`${styles.navItem} ${styles.active}`}>Suivi des Absences</Link>
-        </nav>
-        <div className={styles.sidebarFooter}>
-          <div className={styles.userAvatar}>{userName.charAt(0)}</div>
-          <div>
-            <div style={{ fontWeight: 600 }}>{userName}</div>
-            <div style={{ color: "#9ca3af", fontSize: "0.75rem" }}>Département Mathématiques</div>
-          </div>
-        </div>
-      </aside>
-
-      {/* MAIN CONTENT WRAPPER */}
-      <div className={styles.mainWrapper}>
-        
-        {/* TOP HEADER - TABS */}
-        <header className={styles.topHeader}>
+    <DashboardLayout>
+      {/* TOP HEADER - TABS */}
+      <header className={styles.topHeader}>
           <div className={styles.classTabs}>
             <button 
               className={`${styles.classTab} ${selectedClass === "G4" ? styles.activeTab : ""}`}
@@ -256,6 +236,7 @@ export default function AbsencesPage() {
                               </select>
                             </td>
                             <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                              {justifiedRecords[student.dbId] && <span style={{ color: "#10b981", fontWeight: "bold", fontSize: "1.2rem" }}>✓</span>}
                             </td>
                             <td className={styles.readOnly} style={{ textAlign: "right", color: "#9ca3af", fontSize: "0.75rem" }}>
                               {savingId === student.dbId ? "Enr..." : ""}
@@ -270,7 +251,6 @@ export default function AbsencesPage() {
             </div>
           )}
         </main>
-      </div>
-    </div>
+    </DashboardLayout>
   );
 }

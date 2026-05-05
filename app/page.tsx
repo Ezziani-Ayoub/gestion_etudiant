@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
+import DashboardLayout from "../components/DashboardLayout";
 import { db } from "../lib/firebase";
 import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 
@@ -112,32 +113,9 @@ export default function TeacherDashboard() {
   };
 
   return (
-    <div className={styles.layoutContainer}>
-      {/* LEFT SIDEBAR */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <h2>Gestion Académique</h2>
-        </div>
-        <nav className={styles.sidebarNav}>
-          <Link href="/" className={`${styles.navItem} ${styles.active}`}>Tableau de bord</Link>
-          <Link href="/grades" className={styles.navItem}>Registre des Notes</Link>
-          <Link href="/lessons" className={styles.navItem}>Leçons et Devoirs</Link>
-          <Link href="/absences" className={styles.navItem}>Suivi des Absences</Link>
-        </nav>
-        <div className={styles.sidebarFooter}>
-          <div className={styles.userAvatar}>{userName.charAt(0)}</div>
-          <div>
-            <div style={{ fontWeight: 600 }}>{userName}</div>
-            <div style={{ color: "#9ca3af", fontSize: "0.75rem" }}>Département Mathématiques</div>
-          </div>
-        </div>
-      </aside>
-
-      {/* MAIN CONTENT WRAPPER */}
-      <div className={styles.mainWrapper}>
-        
-        {/* TOP HEADER - TABS */}
-        <header className={styles.topHeader}>
+    <DashboardLayout>
+      {/* TOP HEADER - TABS */}
+      <header className={styles.topHeader}>
           <div className={styles.classTabs}>
             <button 
               className={`${styles.classTab} ${selectedClass === "G4" ? styles.activeTab : ""}`}
@@ -243,7 +221,6 @@ export default function TeacherDashboard() {
             </div>
           )}
         </main>
-      </div>
-    </div>
+    </DashboardLayout>
   );
 }
