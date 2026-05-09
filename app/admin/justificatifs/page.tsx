@@ -3,150 +3,217 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "../../../components/DashboardLayout";
 import { db } from "../../../lib/firebase";
-import { doc, getDoc, getDocs, collection, setDoc } from "firebase/firestore";
-import styles from "../../absences/page.module.css";
+import { doc, getDocs, collection, setDoc } from "firebase/firestore";
+import styles from "../../student/page.module.css";
 
-interface Justification {
+interface StudentOption {
   id: string;
-  studentName: string;
-  studentId: string;
+  dbId: string;
   classId: string;
-  date: string;
-  reason: string;
-  status: "pending" | "applied";
+  name: string;
 }
 
+const REASONS = [
+  "Certificat médical",
+  "Accident",
+  "Décès familial",
+  "Permis de conduire",
+  "Convocation administrative",
+  "Autre justificatif valide",
+];
+
 export default function JustificatifsPage() {
-  const [justifications, setJustifications] = useState<Justification[]>([]);
+  const [students, setStudents] = useState<StudentOption[]>([]);
+  const [search, setSearch] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
+  const [absenceDates, setAbsenceDates] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [reason, setReason] = useState(REASONS[0]);
   const [loading, setLoading] = useState(true);
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
-    const fetchTestJustification = async () => {
+    const fetchStudents = async () => {
       try {
-        const classRef = doc(db, "classes", "G4");
-        const classSnap = await getDoc(classRef);
-        let validDates: string[] = [];
-        
-        if (classSnap.exists()) {
-          const schedule = classSnap.data().schedule || [];
-          const dayMap: { [key: string]: number } = { "Dimanche": 0, "Lundi": 1, "Mardi": 2, "Mercredi": 3, "Jeudi": 4, "Vendredi": 5, "Samedi": 6 };
-          const validDays = schedule.map((s: any) => dayMap[s.day]).filter((d: number) => d !== undefined);
-          
-          if (validDays.length > 0) {
-            const today = new Date();
-            today.setDate(today.getDate() - 1);
-            for (let i = 0; i < 30; i++) {
-              const d = new Date(today);
-              d.setDate(d.getDate() - i);
-              if (validDays.includes(d.getDay())) {
-                validDates.push(d.toISOString().split('T')[0]);
-                break;
-              }
-            }
-          }
+        const classIds: Array<"G4" | "G6" | "G8"> = ["G4", "G6", "G8"];
+        const allStudents: StudentOption[] = [];
+
+        for (const classId of classIds) {
+          const snap = await getDocs(collection(db, `classes/${classId}/students`));
+          snap.docs.forEach((docSnap) => {
+            const data = docSnap.data() as { name: string; id: string };
+            allStudents.push({
+              dbId: docSnap.id,
+              id: String(data.id || docSnap.id),
+              classId,
+              name: data.name,
+            });
+          });
         }
 
-        const studentsRef = collection(db, "classes/G4/students");
-        const studentsSnap = await getDocs(studentsRef);
-        
-        if (!studentsSnap.empty && validDates.length > 0) {
-          const firstStudent = studentsSnap.docs[0];
-          const testDate = validDates[0];
-          
-          // Check if already applied
-          let isApplied = false;
-          const attRef = doc(db, `classes/G4/attendance`, testDate);
-          const attSnap = await getDoc(attRef);
-          if (attSnap.exists()) {
-            const justified = attSnap.data().justified || {};
-            if (justified[firstStudent.id]) {
-              isApplied = true;
-            }
-          }
-
-          setJustifications([
-            {
-              id: "test-justification-1",
-              studentName: firstStudent.data().name,
-              studentId: firstStudent.id,
-              classId: "G4",
-              date: testDate,
-              reason: "A justifié son absence (Certificat médical)",
-              status: isApplied ? "applied" : "pending"
-            }
-          ]);
-        }
+        setStudents(allStudents.sort((a, b) => a.name.localeCompare(b.name)));
       } catch (error) {
-        console.error("Error fetching test data:", error);
+        console.error("Erreur chargement étudiants:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTestJustification();
+    fetchStudents();
   }, []);
 
-  const handleApply = async (j: Justification) => {
+  useEffect(() => {
+    const fetchAbsenceDates = async () => {
+      if (!selectedStudent) {
+        setAbsenceDates([]);
+        setSelectedDate("");
+        return;
+      }
+      try {
+        const snap = await getDocs(collection(db, `classes/${selectedStudent.classId}/attendance`));
+        const dates: string[] = [];
+        snap.docs.forEach((docSnap) => {
+          const data = docSnap.data() as { records?: Record<string, string> };
+          if (data.records?.[selectedStudent.dbId] === "Absent") {
+            dates.push(docSnap.id);
+          }
+        });
+        dates.sort((a, b) => b.localeCompare(a));
+        setAbsenceDates(dates);
+        setSelectedDate(dates[0] || "");
+      } catch (error) {
+        console.error("Erreur chargement absences étudiant:", error);
+      }
+    };
+
+    fetchAbsenceDates();
+  }, [selectedStudent]);
+
+  const handleApply = async () => {
+    if (!selectedStudent || !selectedDate) return;
+    setApplying(true);
     try {
-      const attRef = doc(db, `classes/${j.classId}/attendance`, j.date);
+      const attRef = doc(db, `classes/${selectedStudent.classId}/attendance`, selectedDate);
       await setDoc(attRef, {
         justified: {
-          [j.studentId]: true
+          [selectedStudent.dbId]: true
         }
       }, { merge: true });
 
-      setJustifications(justifications.map(just => just.id === j.id ? { ...just, status: "applied" } : just));
+      await setDoc(doc(db, "absence_justifications", `${selectedStudent.classId}_${selectedStudent.dbId}_${selectedDate}`), {
+        studentName: selectedStudent.name,
+        studentId: selectedStudent.dbId,
+        classId: selectedStudent.classId,
+        date: selectedDate,
+        reason,
+        appliedAt: Date.now(),
+      });
       
-      alert(`Justification appliquée. Vous pouvez vérifier dans le Suivi des Absences pour la date ${j.date}.`);
+      alert("Justification appliquée avec succès.");
     } catch (error) {
       console.error("Erreur lors de l'application", error);
-      alert("Erreur lors de l'enregistrement dans Firebase. Assurez-vous que l'ID de l'étudiant est correct.");
+      alert("Erreur lors de l'enregistrement de la justification.");
+    } finally {
+      setApplying(false);
     }
   };
 
+  const filteredStudents = students.filter((s) =>
+    `${s.name} ${s.classId} ${s.id}`.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <DashboardLayout>
-      <main className={styles.contentBody}>
-        <h1 className={styles.pageTitle}>Justificatifs d'Absence</h1>
-        
-        <div className={styles.panel} style={{ padding: "1.5rem" }}>
-          <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem", color: "#374151" }}>Liste des justifications à appliquer</h2>
-          
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <div>
+            <h1 className={styles.title}>Justificatifs d&apos;Absence</h1>
+            <p className={styles.subtitle}>Sélectionner un étudiant, une date d&apos;absence et un motif</p>
+          </div>
+        </div>
+
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Recherche étudiant</h2>
+          </div>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Nom, classe ou ID..."
+            style={{ width: "100%", padding: "0.75rem", borderRadius: 8, border: "1px solid #d1d5db" }}
+          />
+          <div style={{ marginTop: "0.75rem", maxHeight: "220px", overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: 8 }}>
+            {filteredStudents.map((student) => (
+              <button
+                key={`${student.classId}-${student.dbId}`}
+                type="button"
+                onClick={() => setSelectedStudent(student)}
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "0.65rem 0.85rem",
+                  border: "none",
+                  borderBottom: "1px solid #f3f4f6",
+                  background: selectedStudent?.dbId === student.dbId && selectedStudent?.classId === student.classId ? "#eff6ff" : "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                {student.name} - {student.classId} (#{student.id})
+              </button>
+            ))}
+            {!loading && filteredStudents.length === 0 && (
+              <div style={{ padding: "0.8rem", color: "#6b7280" }}>Aucun étudiant trouvé.</div>
+            )}
+          </div>
+        </div>
+
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Application du justificatif</h2>
+          </div>
           {loading ? (
-            <p style={{ color: "#6b7280" }}>Chargement des justifications...</p>
-          ) : justifications.length === 0 ? (
-            <p style={{ color: "#6b7280" }}>Aucune justification en attente.</p>
+            <p style={{ color: "#6b7280" }}>Chargement des données...</p>
+          ) : !selectedStudent ? (
+            <p style={{ color: "#6b7280" }}>Sélectionnez un étudiant pour continuer.</p>
+          ) : absenceDates.length === 0 ? (
+            <p style={{ color: "#6b7280" }}>Aucune absence enregistrée pour cet étudiant.</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {justifications.map(j => (
-                <div key={j.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', border: '1px solid #e5e7eb', borderRadius: '8px', backgroundColor: j.status === 'applied' ? '#f9fafb' : 'white', transition: "all 0.2s", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
-                  <div>
-                    <div style={{ fontWeight: 600, color: "#111827", fontSize: "1.05rem" }}>{j.studentName} <span style={{ color: "#6b7280", fontWeight: "normal", fontSize: "0.9rem" }}>({j.classId})</span></div>
-                    <div style={{ color: "#4b5563", fontSize: "0.875rem", marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <span style={{ backgroundColor: "#e5e7eb", padding: "0.2rem 0.5rem", borderRadius: "4px", fontSize: "0.75rem", fontWeight: 600 }}>{j.date}</span>
-                      {j.reason}
-                    </div>
-                  </div>
-                  {j.status === "pending" ? (
-                    <button 
-                      onClick={() => handleApply(j)}
-                      style={{ padding: "0.6rem 1.25rem", backgroundColor: "#3b82f6", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: 600, transition: "background-color 0.2s" }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#2563eb"}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#3b82f6"}
-                    >
-                      Appliquer
-                    </button>
-                  ) : (
-                    <span style={{ color: "#10b981", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem", backgroundColor: "#d1fae5", padding: "0.5rem 1rem", borderRadius: "6px" }}>
-                      ✓ Justifié
-                    </span>
-                  )}
-                </div>
-              ))}
+            <div style={{ display: "grid", gap: "0.8rem", maxWidth: "560px" }}>
+              <div>
+                <label style={{ display: "block", marginBottom: "0.35rem", fontWeight: 600, color: "#374151" }}>Date d&apos;absence</label>
+                <select value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} style={{ width: "100%", padding: "0.65rem", border: "1px solid #d1d5db", borderRadius: 8 }}>
+                  {absenceDates.map((d) => (
+                    <option key={d} value={d}>
+                      {new Date(d).toLocaleDateString("fr-FR")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: "0.35rem", fontWeight: 600, color: "#374151" }}>Motif</label>
+                <select value={reason} onChange={(e) => setReason(e.target.value)} style={{ width: "100%", padding: "0.65rem", border: "1px solid #d1d5db", borderRadius: 8 }}>
+                  {REASONS.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleApply}
+                disabled={applying}
+                style={{ border: "none", borderRadius: 8, padding: "0.7rem 1rem", background: "#2563eb", color: "white", fontWeight: 600, cursor: "pointer" }}
+              >
+                {applying ? "Application..." : "Appliquer la justification"}
+              </button>
             </div>
           )}
         </div>
-      </main>
+      </div>
     </DashboardLayout>
   );
 }

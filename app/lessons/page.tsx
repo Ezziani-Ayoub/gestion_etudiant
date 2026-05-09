@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
 import styles from "./page.module.css";
 import DashboardLayout from "../../components/DashboardLayout";
 import { db } from "../../lib/firebase";
 import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
+import type { AuthUser } from "../../lib/auth";
 
 interface Lesson {
   id: string;
@@ -15,11 +15,33 @@ interface Lesson {
   category: "Cours" | "Devoir";
   size: number;
   uploadedAt: number;
+  module?: string;
+  teacherName?: string;
+  teacherCode?: string;
+}
+
+const MODULES = [
+  "Mathématiques",
+  "Physique-Chimie",
+  "SVT",
+  "Français",
+  "Anglais",
+  "Histoire-Géographie",
+  "Informatique",
+];
+
+function getClientSession(): AuthUser | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|;\s*)client_session=([^;]*)/);
+  if (!match) return null;
+  try {
+    return JSON.parse(decodeURIComponent(match[1])) as AuthUser;
+  } catch {
+    return null;
+  }
 }
 
 export default function LessonsPage() {
-  const userName = "Professeur";
-  
   const [selectedClass, setSelectedClass] = useState<"G4" | "G6" | "G8">("G4");
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +49,7 @@ export default function LessonsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [uploadCategory, setUploadCategory] = useState<"Cours" | "Devoir">("Cours");
+  const [selectedModule, setSelectedModule] = useState<string>(() => getClientSession()?.module || "Mathématiques");
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -47,8 +70,6 @@ export default function LessonsPage() {
   }, [selectedClass]);
 
   const handleDeleteLesson = async (lessonId: string) => {
-    if (!confirm("Voulez-vous vraiment supprimer cet élément ?")) return;
-    
     try {
       await deleteDoc(doc(db, `classes/${selectedClass}/lessons`, lessonId));
       setLessons(prev => prev.filter(l => l.id !== lessonId));
@@ -85,11 +106,15 @@ export default function LessonsPage() {
       const data = await res.json();
       
       if (data.secure_url) {
+        const session = getClientSession();
         const newLesson = {
           title: file.name,
           url: data.secure_url,
           type: file.type.includes("pdf") ? "PDF" : file.type.includes("video") ? "Video" : "Document",
           category: uploadCategory,
+          module: selectedModule,
+          teacherName: session?.name || "Professeur",
+          teacherCode: session?.code || "TEACHER",
           size: file.size,
           uploadedAt: Date.now()
         };
@@ -147,6 +172,21 @@ export default function LessonsPage() {
         <main className={styles.contentBody}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
             <h1 className={styles.pageTitle} style={{ margin: 0 }}>Référentiel : Classe {selectedClass}</h1>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <label htmlFor="module-select" style={{ color: "#4b5563", fontSize: "0.9rem", fontWeight: 600 }}>Module</label>
+              <select
+                id="module-select"
+                value={selectedModule}
+                onChange={(e) => setSelectedModule(e.target.value)}
+                style={{ padding: "0.45rem 0.6rem", borderRadius: "6px", border: "1px solid #d1d5db" }}
+              >
+                {MODULES.map((moduleName) => (
+                  <option key={moduleName} value={moduleName}>
+                    {moduleName}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <input 
@@ -183,7 +223,7 @@ export default function LessonsPage() {
                       <div className={styles.lessonInfo}>
                         <h4 className={styles.lessonTitle}>{lesson.title}</h4>
                         <p className={styles.lessonMeta}>
-                          {lesson.type} • {formatSize(lesson.size)} • Ajouté le {new Date(lesson.uploadedAt).toLocaleDateString()}
+                          {lesson.module || "Mathématiques"} • {lesson.type} • {formatSize(lesson.size)} • Ajouté le {new Date(lesson.uploadedAt).toLocaleDateString()}
                         </p>
                       </div>
                       <div className={styles.lessonActions}>
@@ -218,7 +258,7 @@ export default function LessonsPage() {
                       <div className={styles.lessonInfo}>
                         <h4 className={styles.lessonTitle}>{lesson.title}</h4>
                         <p className={styles.lessonMeta}>
-                          {lesson.type} • {formatSize(lesson.size)} • Ajouté le {new Date(lesson.uploadedAt).toLocaleDateString()}
+                          {lesson.module || "Mathématiques"} • {lesson.type} • {formatSize(lesson.size)} • Ajouté le {new Date(lesson.uploadedAt).toLocaleDateString()}
                         </p>
                       </div>
                       <div className={styles.lessonActions}>

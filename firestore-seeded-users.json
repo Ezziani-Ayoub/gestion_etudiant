@@ -1,0 +1,378 @@
+{
+  "teachers": [
+    {
+      "code": "TEACHER1",
+      "name": "Professeur G4"
+    },
+    {
+      "code": "T5GBKVRW",
+      "name": "Professeur G6"
+    },
+    {
+      "code": "GLCWKB9E",
+      "name": "Professeur G8"
+    }
+  ],
+  "students": [
+    {
+      "code": "STUDENT1",
+      "name": "Youssef El Amrani",
+      "classId": "G4",
+      "studentId": "1"
+    },
+    {
+      "code": "TG1IOS9Z",
+      "name": "Anas El Mansouri",
+      "classId": "G4",
+      "studentId": "10"
+    },
+    {
+      "code": "62D8371I",
+      "name": "Amina El Haddad",
+      "classId": "G4",
+      "studentId": "11"
+    },
+    {
+      "code": "CP1RSZ6G",
+      "name": "Khadija Bennis",
+      "classId": "G4",
+      "studentId": "12"
+    },
+    {
+      "code": "QEVL5ICI",
+      "name": "Fatima Zahra El Alami",
+      "classId": "G4",
+      "studentId": "13"
+    },
+    {
+      "code": "XDKX47PL",
+      "name": "Salma Ait Taleb",
+      "classId": "G4",
+      "studentId": "14"
+    },
+    {
+      "code": "LRGUR5ID",
+      "name": "Imane El Ouazzani",
+      "classId": "G4",
+      "studentId": "15"
+    },
+    {
+      "code": "YGJANBHR",
+      "name": "Hafsa Benkirane",
+      "classId": "G4",
+      "studentId": "16"
+    },
+    {
+      "code": "95Q59MHQ",
+      "name": "Zineb El Mokri",
+      "classId": "G4",
+      "studentId": "17"
+    },
+    {
+      "code": "EFWMMPGE",
+      "name": "Sanae El Kettani",
+      "classId": "G4",
+      "studentId": "18"
+    },
+    {
+      "code": "AOSF6CXA",
+      "name": "Amine Bensalem",
+      "classId": "G4",
+      "studentId": "2"
+    },
+    {
+      "code": "8VXKZSFR",
+      "name": "Hind El Filali",
+      "classId": "G4",
+      "studentId": "20"
+    },
+    {
+      "code": "JRW1EXC2",
+      "name": "Ayoub Ezziani",
+      "classId": "G4",
+      "studentId": "21"
+    },
+    {
+      "code": "LJVE677L",
+      "name": "Hamza Ait Lahcen",
+      "classId": "G4",
+      "studentId": "3"
+    },
+    {
+      "code": "0VHB39MU",
+      "name": "Rachid El Fassi",
+      "classId": "G4",
+      "studentId": "4"
+    },
+    {
+      "code": "L631YCJS",
+      "name": "Karim Benjelloun",
+      "classId": "G4",
+      "studentId": "5"
+    },
+    {
+      "code": "LGMK0OHN",
+      "name": "Mehdi El Idrissi",
+      "classId": "G4",
+      "studentId": "6"
+    },
+    {
+      "code": "1U50ZG5D",
+      "name": "Zakaria Ait Ouargh",
+      "classId": "G4",
+      "studentId": "7"
+    },
+    {
+      "code": "2FY2SVI2",
+      "name": "Othmane El Alaoui",
+      "classId": "G4",
+      "studentId": "8"
+    },
+    {
+      "code": "CFHWMIO2",
+      "name": "Soufiane Berrada",
+      "classId": "G4",
+      "studentId": "9"
+    },
+    {
+      "code": "XC4LZPVK",
+      "name": "Bilal El Hariri",
+      "classId": "G6",
+      "studentId": "1"
+    },
+    {
+      "code": "MDFWN7RF",
+      "name": "Samira El Fihri",
+      "classId": "G6",
+      "studentId": "10"
+    },
+    {
+      "code": "HISUXTIG",
+      "name": "Latifa El Amiri",
+      "classId": "G6",
+      "studentId": "11"
+    },
+    {
+      "code": "BB3UR65N",
+      "name": "Naima Ait Moussa",
+      "classId": "G6",
+      "studentId": "12"
+    },
+    {
+      "code": "0SF77D89",
+      "name": "Asmae El Idrissi",
+      "classId": "G6",
+      "studentId": "13"
+    },
+    {
+      "code": "RV1FKZB6",
+      "name": "Ilham El Khouya",
+      "classId": "G6",
+      "studentId": "14"
+    },
+    {
+      "code": "HYI81OR5",
+      "name": "Ghita El Baadi",
+      "classId": "G6",
+      "studentId": "15"
+    },
+    {
+      "code": "TZBBGYC5",
+      "name": "Nawal El Harrak",
+      "classId": "G6",
+      "studentId": "16"
+    },
+    {
+      "code": "75UK3IN4",
+      "name": "Karima Boussaid",
+      "classId": "G6",
+      "studentId": "17"
+    },
+    {
+      "code": "MVN6SZBX",
+      "name": "Wafae El Ghanmi",
+      "classId": "G6",
+      "studentId": "18"
+    },
+    {
+      "code": "KJRAO5UP",
+      "name": "Chaimae El Youssoufi",
+      "classId": "G6",
+      "studentId": "19"
+    },
+    {
+      "code": "OX0SXWMF",
+      "name": "Nabil Ait Benali",
+      "classId": "G6",
+      "studentId": "2"
+    },
+    {
+      "code": "I94GD0Y0",
+      "name": "Hicham El Kabbaj",
+      "classId": "G6",
+      "studentId": "3"
+    },
+    {
+      "code": "NQ2GLNOB",
+      "name": "Abdelilah El Omari",
+      "classId": "G6",
+      "studentId": "4"
+    },
+    {
+      "code": "079RRWSZ",
+      "name": "Driss El Khattabi",
+      "classId": "G6",
+      "studentId": "5"
+    },
+    {
+      "code": "6K25KB2I",
+      "name": "Mustapha El Glaoui",
+      "classId": "G6",
+      "studentId": "6"
+    },
+    {
+      "code": "HX6G7UQ2",
+      "name": "Ayoub Boulahfa",
+      "classId": "G6",
+      "studentId": "7"
+    },
+    {
+      "code": "B7EFDJBB",
+      "name": "Tarik El Mernissi",
+      "classId": "G6",
+      "studentId": "8"
+    },
+    {
+      "code": "48GJS09B",
+      "name": "Reda El Bouchraoui",
+      "classId": "G6",
+      "studentId": "9"
+    },
+    {
+      "code": "07LDYAUP",
+      "name": "Ismail El Bouzidi",
+      "classId": "G8",
+      "studentId": "1"
+    },
+    {
+      "code": "SJO9HUAZ",
+      "name": "Abdelkader El Hila",
+      "classId": "G8",
+      "studentId": "10"
+    },
+    {
+      "code": "NRGIG1S1",
+      "name": "Ikram El Hajjaji",
+      "classId": "G8",
+      "studentId": "11"
+    },
+    {
+      "code": "BC9EI47J",
+      "name": "Soukaina El Marzouki",
+      "classId": "G8",
+      "studentId": "12"
+    },
+    {
+      "code": "9UYTV0V4",
+      "name": "Doha El Akhawayn",
+      "classId": "G8",
+      "studentId": "13"
+    },
+    {
+      "code": "ELA0N7EC",
+      "name": "Oumaima El Bahlouli",
+      "classId": "G8",
+      "studentId": "14"
+    },
+    {
+      "code": "ZG5POJPO",
+      "name": "Kaoutar El Fadili",
+      "classId": "G8",
+      "studentId": "15"
+    },
+    {
+      "code": "D64ZPC2C",
+      "name": "Meryem El Karkouri",
+      "classId": "G8",
+      "studentId": "16"
+    },
+    {
+      "code": "VFDLC7R1",
+      "name": "Hanane El Khamlichi",
+      "classId": "G8",
+      "studentId": "17"
+    },
+    {
+      "code": "RSYNNSL9",
+      "name": "Nisrine El Boukhari",
+      "classId": "G8",
+      "studentId": "18"
+    },
+    {
+      "code": "C6C39AV4",
+      "name": "Ibtissam El Maimouni",
+      "classId": "G8",
+      "studentId": "19"
+    },
+    {
+      "code": "8F1ZNSO3",
+      "name": "Adil El Hachimi",
+      "classId": "G8",
+      "studentId": "2"
+    },
+    {
+      "code": "UYXIGHQ0",
+      "name": "Rania El Idrissi",
+      "classId": "G8",
+      "studentId": "20"
+    },
+    {
+      "code": "PFPOB1KK",
+      "name": "Mourad El Qadiri",
+      "classId": "G8",
+      "studentId": "3"
+    },
+    {
+      "code": "FT4BNY3Y",
+      "name": "Jalal El Bakkali",
+      "classId": "G8",
+      "studentId": "4"
+    },
+    {
+      "code": "54Q2WJYF",
+      "name": "Fouad El Bakkouch",
+      "classId": "G8",
+      "studentId": "5"
+    },
+    {
+      "code": "GK8HA0NI",
+      "name": "Samir El Founti",
+      "classId": "G8",
+      "studentId": "6"
+    },
+    {
+      "code": "JSLODT6Q",
+      "name": "Yassine El Moutawakil",
+      "classId": "G8",
+      "studentId": "7"
+    },
+    {
+      "code": "8FS9LKON",
+      "name": "Khalid El Bahja",
+      "classId": "G8",
+      "studentId": "8"
+    },
+    {
+      "code": "DHWFDZ0C",
+      "name": "Badr Eddine El Amri",
+      "classId": "G8",
+      "studentId": "9"
+    }
+  ],
+  "administration": [
+    {
+      "code": "ADMIN123",
+      "name": "Admin System"
+    }
+  ]
+}
