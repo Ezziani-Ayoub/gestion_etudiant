@@ -16,6 +16,10 @@ interface Justification {
   status: "pending" | "applied";
 }
 
+interface ScheduleSlot {
+  day: string;
+}
+
 export default function JustificatifsPage() {
   const [justifications, setJustifications] = useState<Justification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,12 +29,12 @@ export default function JustificatifsPage() {
       try {
         const classRef = doc(db, "classes", "G4");
         const classSnap = await getDoc(classRef);
-        let validDates: string[] = [];
+        const validDates: string[] = [];
         
         if (classSnap.exists()) {
-          const schedule = classSnap.data().schedule || [];
+          const schedule = (classSnap.data().schedule || []) as ScheduleSlot[];
           const dayMap: { [key: string]: number } = { "Dimanche": 0, "Lundi": 1, "Mardi": 2, "Mercredi": 3, "Jeudi": 4, "Vendredi": 5, "Samedi": 6 };
-          const validDays = schedule.map((s: any) => dayMap[s.day]).filter((d: number) => d !== undefined);
+          const validDays = schedule.map((s) => dayMap[s.day]).filter((d: number) => d !== undefined);
           
           if (validDays.length > 0) {
             const today = new Date();
@@ -107,7 +111,7 @@ export default function JustificatifsPage() {
   return (
     <DashboardLayout>
       <main className={styles.contentBody}>
-        <h1 className={styles.pageTitle}>Justificatifs d'Absence</h1>
+        <h1 className={styles.pageTitle}>Justificatifs d&apos;Absence</h1>
         
         <div className={styles.panel} style={{ padding: "1.5rem" }}>
           <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem", color: "#374151" }}>Liste des justifications à appliquer</h2>

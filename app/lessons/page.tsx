@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
 import styles from "./page.module.css";
 import DashboardLayout from "../../components/DashboardLayout";
 import { db } from "../../lib/firebase";
 import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
+import type { AuthUser } from "../../lib/auth";
 
 interface Lesson {
   id: string;
@@ -15,10 +15,35 @@ interface Lesson {
   category: "Cours" | "Devoir";
   size: number;
   uploadedAt: number;
+  module?: string;
+  teacherName?: string;
+  teacherCode?: string;
+}
+
+const MODULES = [
+  "Mathématiques",
+  "Physique-Chimie",
+  "SVT",
+  "Français",
+  "Anglais",
+  "Histoire-Géographie",
+  "Informatique",
+];
+
+function getClientSession(): AuthUser | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|;\s*)client_session=([^;]*)/);
+  if (!match) return null;
+  try {
+    return JSON.parse(decodeURIComponent(match[1])) as AuthUser;
+  } catch {
+    return null;
+  }
 }
 
 export default function LessonsPage() {
-  const userName = "Professeur";
+  const session = getClientSession();
+  const teacherModule = session?.module || "";
   
   const [selectedClass, setSelectedClass] = useState<"G4" | "G6" | "G8">("G4");
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -29,6 +54,12 @@ export default function LessonsPage() {
   const [uploadCategory, setUploadCategory] = useState<"Cours" | "Devoir">("Cours");
 
   useEffect(() => {
+    // Check if teacher's module is configured
+    if (!teacherModule) {
+      setLoading(false);
+      return;
+    }
+
     const fetchLessons = async () => {
       setLoading(true);
       try {
@@ -36,19 +67,20 @@ export default function LessonsPage() {
         const snap = await getDocs(lessonsRef);
         const fetchedLessons = snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as Omit<Lesson, "id">) })) as Lesson[];
         
-        fetchedLessons.sort((a, b) => b.uploadedAt - a.uploadedAt);
-        setLessons(fetchedLessons);
+        // Filter lessons for this teacher's module
+        const moduleFilteredLessons = fetchedLessons.filter(l => l.module === teacherModule);
+        
+        moduleFilteredLessons.sort((a, b) => b.uploadedAt - a.uploadedAt);
+        setLessons(moduleFilteredLessons);
       } catch (error) {
         console.error("Error fetching lessons:", error);
       }
       setLoading(false);
     };
     fetchLessons();
-  }, [selectedClass]);
+  }, [selectedClass, teacherModule]);
 
   const handleDeleteLesson = async (lessonId: string) => {
-    if (!confirm("Voulez-vous vraiment supprimer cet élément ?")) return;
-    
     try {
       await deleteDoc(doc(db, `classes/${selectedClass}/lessons`, lessonId));
       setLessons(prev => prev.filter(l => l.id !== lessonId));
@@ -85,11 +117,15 @@ export default function LessonsPage() {
       const data = await res.json();
       
       if (data.secure_url) {
+        const session = getClientSession();
         const newLesson = {
           title: file.name,
           url: data.secure_url,
           type: file.type.includes("pdf") ? "PDF" : file.type.includes("video") ? "Video" : "Document",
           category: uploadCategory,
+          module: teacherModule,
+          teacherName: session?.name || "Professeur",
+          teacherCode: "TEACHER",
           size: file.size,
           uploadedAt: Date.now()
         };
@@ -145,9 +181,19 @@ export default function LessonsPage() {
 
         {/* CONTENT BODY */}
         <main className={styles.contentBody}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-            <h1 className={styles.pageTitle} style={{ margin: 0 }}>Référentiel : Classe {selectedClass}</h1>
-          </div>
+          {!teacherModule ? (
+            <div style={{ padding: "2rem", backgroundColor: "#fee2e2", border: "1px solid #fecaca", borderRadius: "8px", color: "#991b1b" }}>
+              <h3 style={{ margin: "0 0 0.5rem 0" }}>Module non configuré</h3>
+              <p>Votre module n'a pas été défini. Veuillez contacter l'administration pour configurer votre matière.</p>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+                <div>
+                  <h1 className={styles.pageTitle} style={{ margin: 0 }}>Référentiel : Classe {selectedClass}</h1>
+                  <p style={{ margin: "0.5rem 0 0 0", color: "#6b7280", fontSize: "0.9rem" }}>Module : <strong>{teacherModule}</strong></p>
+                </div>
+              </div>
 
           <input 
             type="file" 
@@ -183,7 +229,7 @@ export default function LessonsPage() {
                       <div className={styles.lessonInfo}>
                         <h4 className={styles.lessonTitle}>{lesson.title}</h4>
                         <p className={styles.lessonMeta}>
-                          {lesson.type} • {formatSize(lesson.size)} • Ajouté le {new Date(lesson.uploadedAt).toLocaleDateString()}
+                          {lesson.module || "Mathématiques"} • {lesson.type} • {formatSize(lesson.size)} • Ajouté le {new Date(lesson.uploadedAt).toLocaleDateString()}
                         </p>
                       </div>
                       <div className={styles.lessonActions}>
@@ -218,7 +264,7 @@ export default function LessonsPage() {
                       <div className={styles.lessonInfo}>
                         <h4 className={styles.lessonTitle}>{lesson.title}</h4>
                         <p className={styles.lessonMeta}>
-                          {lesson.type} • {formatSize(lesson.size)} • Ajouté le {new Date(lesson.uploadedAt).toLocaleDateString()}
+                          {lesson.module || "Mathématiques"} • {lesson.type} • {formatSize(lesson.size)} • Ajouté le {new Date(lesson.uploadedAt).toLocaleDateString()}
                         </p>
                       </div>
                       <div className={styles.lessonActions}>
@@ -231,6 +277,8 @@ export default function LessonsPage() {
               </div>
 
             </div>
+          )}
+            </>
           )}
         </main>
     </DashboardLayout>

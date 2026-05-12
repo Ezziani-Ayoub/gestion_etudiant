@@ -7,6 +7,8 @@ import DashboardLayout from "../../components/DashboardLayout";
 import { db } from "../../lib/firebase";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 
+import type { AuthUser } from "../../lib/auth";
+
 interface Student {
   id: number | string;
   dbId: string;
@@ -23,8 +25,21 @@ const dayMap: { [key: string]: number } = {
   "Dimanche": 0, "Lundi": 1, "Mardi": 2, "Mercredi": 3, "Jeudi": 4, "Vendredi": 5, "Samedi": 6
 };
 
+function getClientSession(): AuthUser | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|;\s*)client_session=([^;]*)/);
+  if (!match) return null;
+  try {
+    return JSON.parse(decodeURIComponent(match[1])) as AuthUser;
+  } catch {
+    return null;
+  }
+}
+
 export default function AbsencesPage() {
-  const userName = "Professeur";
+  const session = getClientSession();
+  const teacherModule = session?.module || "";
+  const userName = session?.name || "Professeur";
 
   const [selectedClass, setSelectedClass] = useState<"G4" | "G6" | "G8">("G4");
   const [students, setStudents] = useState<Student[]>([]);
@@ -147,6 +162,13 @@ export default function AbsencesPage() {
 
   return (
     <DashboardLayout>
+      {!teacherModule ? (
+        <div style={{ padding: "2rem", backgroundColor: "#fee2e2", border: "1px solid #fecaca", borderRadius: "8px", color: "#991b1b", margin: "2rem" }}>
+          <h3 style={{ margin: "0 0 0.5rem 0" }}>Module non configuré</h3>
+          <p>Votre module n'a pas été défini. Veuillez contacter l'administration pour configurer votre matière.</p>
+        </div>
+      ) : (
+        <>
       {/* TOP HEADER - TABS */}
       <header className={styles.topHeader}>
           <div className={styles.classTabs}>
@@ -251,6 +273,8 @@ export default function AbsencesPage() {
             </div>
           )}
         </main>
+        </>
+      )}
     </DashboardLayout>
   );
 }
