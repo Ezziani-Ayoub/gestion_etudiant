@@ -42,6 +42,9 @@ function getClientSession(): AuthUser | null {
 }
 
 export default function LessonsPage() {
+  const session = getClientSession();
+  const teacherModule = session?.module || "";
+  
   const [selectedClass, setSelectedClass] = useState<"G4" | "G6" | "G8">("G4");
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,9 +52,14 @@ export default function LessonsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [uploadCategory, setUploadCategory] = useState<"Cours" | "Devoir">("Cours");
-  const [selectedModule, setSelectedModule] = useState<string>(() => getClientSession()?.module || "Mathématiques");
 
   useEffect(() => {
+    // Check if teacher's module is configured
+    if (!teacherModule) {
+      setLoading(false);
+      return;
+    }
+
     const fetchLessons = async () => {
       setLoading(true);
       try {
@@ -59,15 +67,18 @@ export default function LessonsPage() {
         const snap = await getDocs(lessonsRef);
         const fetchedLessons = snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as Omit<Lesson, "id">) })) as Lesson[];
         
-        fetchedLessons.sort((a, b) => b.uploadedAt - a.uploadedAt);
-        setLessons(fetchedLessons);
+        // Filter lessons for this teacher's module
+        const moduleFilteredLessons = fetchedLessons.filter(l => l.module === teacherModule);
+        
+        moduleFilteredLessons.sort((a, b) => b.uploadedAt - a.uploadedAt);
+        setLessons(moduleFilteredLessons);
       } catch (error) {
         console.error("Error fetching lessons:", error);
       }
       setLoading(false);
     };
     fetchLessons();
-  }, [selectedClass]);
+  }, [selectedClass, teacherModule]);
 
   const handleDeleteLesson = async (lessonId: string) => {
     try {
@@ -112,9 +123,9 @@ export default function LessonsPage() {
           url: data.secure_url,
           type: file.type.includes("pdf") ? "PDF" : file.type.includes("video") ? "Video" : "Document",
           category: uploadCategory,
-          module: selectedModule,
+          module: teacherModule,
           teacherName: session?.name || "Professeur",
-          teacherCode: session?.code || "TEACHER",
+          teacherCode: "TEACHER",
           size: file.size,
           uploadedAt: Date.now()
         };
@@ -170,24 +181,19 @@ export default function LessonsPage() {
 
         {/* CONTENT BODY */}
         <main className={styles.contentBody}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-            <h1 className={styles.pageTitle} style={{ margin: 0 }}>Référentiel : Classe {selectedClass}</h1>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <label htmlFor="module-select" style={{ color: "#4b5563", fontSize: "0.9rem", fontWeight: 600 }}>Module</label>
-              <select
-                id="module-select"
-                value={selectedModule}
-                onChange={(e) => setSelectedModule(e.target.value)}
-                style={{ padding: "0.45rem 0.6rem", borderRadius: "6px", border: "1px solid #d1d5db" }}
-              >
-                {MODULES.map((moduleName) => (
-                  <option key={moduleName} value={moduleName}>
-                    {moduleName}
-                  </option>
-                ))}
-              </select>
+          {!teacherModule ? (
+            <div style={{ padding: "2rem", backgroundColor: "#fee2e2", border: "1px solid #fecaca", borderRadius: "8px", color: "#991b1b" }}>
+              <h3 style={{ margin: "0 0 0.5rem 0" }}>Module non configuré</h3>
+              <p>Votre module n'a pas été défini. Veuillez contacter l'administration pour configurer votre matière.</p>
             </div>
-          </div>
+          ) : (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+                <div>
+                  <h1 className={styles.pageTitle} style={{ margin: 0 }}>Référentiel : Classe {selectedClass}</h1>
+                  <p style={{ margin: "0.5rem 0 0 0", color: "#6b7280", fontSize: "0.9rem" }}>Module : <strong>{teacherModule}</strong></p>
+                </div>
+              </div>
 
           <input 
             type="file" 
@@ -271,6 +277,8 @@ export default function LessonsPage() {
               </div>
 
             </div>
+          )}
+            </>
           )}
         </main>
     </DashboardLayout>

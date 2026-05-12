@@ -34,7 +34,8 @@ export default function GradesPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
-  const [teacherModule] = useState<string>(() => getClientSession()?.module || "Mathématiques");
+  const [teacherModule] = useState<string>(() => getClientSession()?.module || "Module non configuré");
+  const isModuleConfigured = teacherModule !== "Module non configuré";
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -89,6 +90,10 @@ export default function GradesPage() {
   };
 
   const handleSaveGrades = async () => {
+    if (!isModuleConfigured) {
+      alert("Votre module n'est pas configuré. Contactez l'administration.");
+      return;
+    }
     setSavingId("all");
     students.forEach((student) => {
       // Save under both keys so student profile can always resolve grades
@@ -111,6 +116,22 @@ export default function GradesPage() {
     const avg = (control * 0.4) + (exam * 0.6);
     return avg.toFixed(2);
   };
+
+  const calculateGeneralAverage = () => {
+    const averages = students
+      .map((student) => {
+        const moduleGrades = student.grades?.[teacherModule] || {};
+        const avg = calculateAverage(moduleGrades.control, moduleGrades.exam);
+        return parseFloat(avg as string);
+      })
+      .filter((value) => !isNaN(value));
+
+    if (averages.length === 0) return "--";
+    const total = averages.reduce((sum, value) => sum + value, 0);
+    return (total / averages.length).toFixed(2);
+  };
+
+  const generalAverage = calculateGeneralAverage();
 
   return (
     <DashboardLayout>
@@ -141,10 +162,16 @@ export default function GradesPage() {
         {/* CONTENT BODY */}
         <main className={styles.contentBody}>
           <h1 className={styles.pageTitle}>Registre des Notes : {teacherModule} (Classe {selectedClass})</h1>
+          {!isModuleConfigured && (
+            <div style={{ marginBottom: "1rem", color: "#b91c1c", fontWeight: 600 }}>
+              Module non configuré pour ce compte. Les notes sont désactivées tant que l&apos;administration ne définit pas votre matière.
+            </div>
+          )}
 
           {loading ? (
             <div className={styles.loadingState}>Chargement du registre...</div>
           ) : (
+            <>
             <div className={styles.panel}>
               <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
                 <table className={styles.dataTable}>
@@ -162,7 +189,7 @@ export default function GradesPage() {
                       const moduleGrades = student.grades?.[teacherModule] || {};
                       const avg = calculateAverage(moduleGrades.control, moduleGrades.exam);
                       const avgNum = parseFloat(avg as string);
-                      
+
                       let avgColor = "#111827";
                       if (!isNaN(avgNum)) {
                         avgColor = avgNum >= 10 ? "#059669" : "#dc2626";
@@ -182,6 +209,7 @@ export default function GradesPage() {
                               onChange={(e) => handleGradeChange(student.dbId, "control", e.target.value)}
                               className={styles.inlineInput}
                               placeholder="--"
+                              disabled={!isModuleConfigured}
                             />
                           </td>
                           <td>
@@ -194,6 +222,7 @@ export default function GradesPage() {
                               onChange={(e) => handleGradeChange(student.dbId, "exam", e.target.value)}
                               className={styles.inlineInput}
                               placeholder="--"
+                              disabled={!isModuleConfigured}
                             />
                           </td>
                           <td>
@@ -207,10 +236,16 @@ export default function GradesPage() {
                   </tbody>
                 </table>
               </div>
+              <div style={{ marginTop: "0.75rem", display: "flex", justifyContent: "flex-end", paddingRight: "1rem" }}>
+                <div style={{ fontWeight: 700, color: generalAverage === "--" ? "#6b7280" : "#111827" }}>
+                  Moyenne générale : {generalAverage} {generalAverage !== "--" ? "/ 20" : ""}
+                </div>
+              </div>
+            </div>
               <div style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end" }}>
                 <button 
                   onClick={handleSaveGrades}
-                  disabled={savingId === "all"}
+                  disabled={savingId === "all" || !isModuleConfigured}
                   style={{
                     backgroundColor: "#2563eb",
                     color: "white",
@@ -225,7 +260,7 @@ export default function GradesPage() {
                   {savingId === "all" ? "Enregistrement en cours..." : "Enregistrer"}
                 </button>
               </div>
-            </div>
+            </>
           )}
         </main>
     </DashboardLayout>

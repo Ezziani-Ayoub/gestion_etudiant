@@ -5,6 +5,7 @@ import DashboardLayout from "../../../components/DashboardLayout";
 import styles from "../../student/page.module.css";
 import { addDoc, collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
+import type { AuthUser } from "../../../lib/auth";
 
 interface EventItem {
   id: string;
@@ -14,7 +15,20 @@ interface EventItem {
   createdAt: number;
 }
 
+function getClientSession(): AuthUser | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|;\s*)client_session=([^;]*)/);
+  if (!match) return null;
+  try {
+    return JSON.parse(decodeURIComponent(match[1])) as AuthUser;
+  } catch {
+    return null;
+  }
+}
+
 export default function AdminEvenementsPage() {
+  const [user] = useState<AuthUser | null>(() => getClientSession());
+  const isAdmin = user?.role === "administration";
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState("");
@@ -41,6 +55,7 @@ export default function AdminEvenementsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) return;
     setSaving(true);
     try {
       const payload = { name, date, description, createdAt: Date.now() };
@@ -63,23 +78,29 @@ export default function AdminEvenementsPage() {
         <div className={styles.header}>
           <div>
             <h1 className={styles.title}>Événements</h1>
-            <p className={styles.subtitle}>Publier un événement pour les étudiants et professeurs</p>
+            <p className={styles.subtitle}>
+              {isAdmin
+                ? "Publier un événement pour les étudiants et professeurs"
+                : "Consultation des événements publiés par l'administration"}
+            </p>
           </div>
         </div>
 
-        <div className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Nouveau événement</h2>
+        {isAdmin && (
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>Nouveau événement</h2>
+            </div>
+            <form onSubmit={handleSubmit} style={{ display: "grid", gap: "0.75rem" }}>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom de l'événement" required style={{ padding: "0.65rem", border: "1px solid #d1d5db", borderRadius: 8 }} />
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required style={{ padding: "0.65rem", border: "1px solid #d1d5db", borderRadius: 8 }} />
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" required rows={4} style={{ padding: "0.65rem", border: "1px solid #d1d5db", borderRadius: 8 }} />
+              <button type="submit" disabled={saving} style={{ width: "fit-content", border: "none", borderRadius: 8, padding: "0.7rem 1rem", background: "#2563eb", color: "white", fontWeight: 600, cursor: "pointer" }}>
+                {saving ? "Publication..." : "Publier"}
+              </button>
+            </form>
           </div>
-          <form onSubmit={handleSubmit} style={{ display: "grid", gap: "0.75rem" }}>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom de l'événement" required style={{ padding: "0.65rem", border: "1px solid #d1d5db", borderRadius: 8 }} />
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required style={{ padding: "0.65rem", border: "1px solid #d1d5db", borderRadius: 8 }} />
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" required rows={4} style={{ padding: "0.65rem", border: "1px solid #d1d5db", borderRadius: 8 }} />
-            <button type="submit" disabled={saving} style={{ width: "fit-content", border: "none", borderRadius: 8, padding: "0.7rem 1rem", background: "#2563eb", color: "white", fontWeight: 600, cursor: "pointer" }}>
-              {saving ? "Publication..." : "Publier"}
-            </button>
-          </form>
-        </div>
+        )}
 
         <div className={styles.section}>
           <div className={styles.sectionHeader}>

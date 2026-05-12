@@ -2,15 +2,18 @@
   "teachers": [
     {
       "code": "TEACHER1",
-      "name": "Professeur G4"
+      "name": "Professeur G4",
+      "module": "Mathématiques"
     },
     {
       "code": "T5GBKVRW",
-      "name": "Professeur G6"
+      "name": "Professeur G6",
+      "module": "Physique-Chimie"
     },
     {
       "code": "GLCWKB9E",
-      "name": "Professeur G8"
+      "name": "Professeur G8",
+      "module": "Français"
     }
   ],
   "students": [

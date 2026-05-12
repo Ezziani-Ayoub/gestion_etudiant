@@ -31,7 +31,13 @@ export async function loginAction(role: UserRole, code: string): Promise<{ error
     return { error: "Code invalide. Veuillez réessayer." };
   }
 
-  const userDoc = snap.docs[0].data();
+  // Handle duplicate accounts with same code (common after reseeding):
+  // for teachers, prefer the document that has a non-empty module.
+  const matchingDocs = snap.docs.map((d) => d.data());
+  const userDoc =
+    role === "teacher"
+      ? matchingDocs.find((doc) => typeof doc.module === "string" && doc.module.trim().length > 0) || matchingDocs[0]
+      : matchingDocs[0];
 
   // Set secure HttpOnly cookie for server-side session
   await setSession({

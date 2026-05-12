@@ -7,7 +7,6 @@ import type { AuthUser } from "../../../lib/auth";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { getStudentGradesFromLocalStorage, type GradesMap } from "../../../lib/local-grades";
-import Link from "next/link";
 
 const MODULES = [
   "Mathématiques",
@@ -53,6 +52,23 @@ export default function StudentGrades() {
     const avg = (control * 0.4) + (exam * 0.6);
     return avg.toFixed(2);
   };
+
+  const calculateGeneralAverage = () => {
+    const displayedModules = [...new Set([...MODULES, ...Object.keys(grades)])];
+    const validAverages = displayedModules
+      .map((module) => {
+        const modGrades = grades[module] || {};
+        const avg = calculateAverage(modGrades.control, modGrades.exam);
+        return parseFloat(avg as string);
+      })
+      .filter((value) => !isNaN(value));
+
+    if (validAverages.length === 0) return "--";
+    const total = validAverages.reduce((sum, value) => sum + value, 0);
+    return (total / validAverages.length).toFixed(2);
+  };
+
+  const generalAverage = calculateGeneralAverage();
 
   const handleDownloadPDF = async () => {
     if (!pdfRef.current || !user) return;
@@ -134,21 +150,17 @@ export default function StudentGrades() {
                   );
                 })}
               </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan={3} style={{ textAlign: "right", fontWeight: 700, padding: "0.75rem" }}>
+                    Moyenne générale
+                  </td>
+                  <td style={{ fontWeight: 700, padding: "0.75rem", color: generalAverage === "--" ? "#6b7280" : "#111827" }}>
+                    {generalAverage} {generalAverage !== "--" ? "/ 20" : ""}
+                  </td>
+                </tr>
+              </tfoot>
             </table>
-          </div>
-        </div>
-
-        <div className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Continuer</h2>
-          </div>
-          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-            <Link href="/student/courses-devoirs" className={styles.downloadBtn}>
-              Courses / Devoirs
-            </Link>
-            <Link href="/student/absences" className={styles.downloadBtn}>
-              Absences
-            </Link>
           </div>
         </div>
 

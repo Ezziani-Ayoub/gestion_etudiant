@@ -68,6 +68,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return [
         { type: "header", label: "Administration" },
         { type: "link", href: "/admin", label: "Tableau de bord" },
+        { type: "link", href: "/admin/teachers", label: "Professeurs / Modules" },
         { type: "link", href: "/admin/reunions", label: "Réunions" },
         { type: "link", href: "/admin/rapports", label: "Rapports / Parents" },
         { type: "link", href: "/admin/jours-feries", label: "Jours Fériés" },
