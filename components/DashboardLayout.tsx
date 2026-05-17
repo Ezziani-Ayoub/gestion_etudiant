@@ -140,8 +140,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className={styles.userAvatar}>{user.name.charAt(0).toUpperCase()}</div>
           <div>
             <div style={{ fontWeight: 600 }}>{user.name}</div>
-            <div style={{ color: "#9ca3af", fontSize: "0.75rem", marginBottom: "0.4rem" }}>
-              {user.role}
+            <div style={{ color: "#9ca3af", fontSize: "0.75rem", marginBottom: "0.4rem", textTransform: "capitalize" }}>
+              {user.role === "teacher" && user.module ? user.module : user.role}
             </div>
             <button type="button" className={styles.logoutBtn} onClick={handleLogout}>
               Se déconnecter

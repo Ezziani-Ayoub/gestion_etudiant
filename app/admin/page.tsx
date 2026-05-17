@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import styles from "../student/page.module.css";
 import { db } from "../../lib/firebase";
@@ -27,6 +27,7 @@ export default function AdminDashboardPage() {
   const [selected, setSelected] = useState<DirectoryEntry | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const [stats, setStats] = useState<SelectedStats>({ rapportCount: 0, absenceCount: null });
+  const detailsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchDirectory = async () => {
@@ -191,7 +192,12 @@ export default function AdminDashboardPage() {
                     <td>
                       <button
                         type="button"
-                        onClick={() => setSelected(entry)}
+                        onClick={() => {
+                          setSelected(entry);
+                          setTimeout(() => {
+                            detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }, 100);
+                        }}
                         style={{ border: "none", background: "#2563eb", color: "white", borderRadius: 6, padding: "0.45rem 0.75rem", cursor: "pointer" }}
                       >
                         Voir statut
@@ -205,7 +211,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {selected && (
-          <div className={styles.section}>
+          <div className={styles.section} ref={detailsRef}>
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>Statut de {selected.name}</h2>
             </div>
@@ -215,6 +221,12 @@ export default function AdminDashboardPage() {
               <div style={{ display: "grid", gap: "0.6rem" }}>
                 <div>Type: <strong>{selected.type === "student" ? "Étudiant" : "Professeur"}</strong></div>
                 <div>Classe: <strong>{selected.classId || "-"}</strong></div>
+                <div>
+                  Code de connexion:{" "}
+                  <strong style={{ fontFamily: "monospace", background: "#f3f4f6", padding: "0.1rem 0.4rem", borderRadius: 4 }}>
+                    {selected.code}
+                  </strong>
+                </div>
                 <div>Rapports: <strong>{stats.rapportCount}</strong></div>
                 <div>
                   Absences:{" "}

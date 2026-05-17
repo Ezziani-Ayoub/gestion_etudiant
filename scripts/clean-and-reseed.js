@@ -1,11 +1,19 @@
-// Firestore seeding script using Firebase client SDK
-// Run with: node scripts/seed-firestore.js
+// clean-and-reseed.js
+// Deletes old random-ID documents, then re-seeds with readable IDs.
+// Run with: node scripts/clean-and-reseed.js
 
 const fs = require('fs');
 const path = require('path');
 
 const { initializeApp: initClientApp } = require('firebase/app');
-const { getFirestore: getClientFirestore, collection, doc, setDoc } = require('firebase/firestore');
+const {
+  getFirestore: getClientFirestore,
+  collection,
+  doc,
+  setDoc,
+  getDocs,
+  deleteDoc,
+} = require('firebase/firestore');
 
 const firebaseConfig = {
   apiKey: "AIzaSyDMeI9XaVuUlaXWoaLEp40Cu8sv_Fab_3o",
@@ -31,8 +39,31 @@ function toSlug(name) {
     .replace(/^-|-$/g, '');
 }
 
-async function seed() {
-  console.log('🌱 Seeding Firestore with readable document IDs...\n');
+async function deleteCollection(collectionName) {
+  const snap = await getDocs(collection(db, collectionName));
+  if (snap.empty) {
+    console.log(`  (no documents found in "${collectionName}")`);
+    return;
+  }
+  for (const docSnap of snap.docs) {
+    await deleteDoc(doc(db, collectionName, docSnap.id));
+    console.log(`  🗑️  Deleted ${collectionName}/${docSnap.id}`);
+  }
+}
+
+async function run() {
+  console.log('🧹 Step 1: Cleaning old documents...\n');
+
+  console.log('Cleaning "teachers"...');
+  await deleteCollection('teachers');
+
+  console.log('Cleaning "administration"...');
+  await deleteCollection('administration');
+
+  console.log('Cleaning "students"...');
+  await deleteCollection('students');
+
+  console.log('\n🌱 Step 2: Re-seeding with readable document IDs...\n');
 
   // Seed teachers
   console.log(`📚 Seeding ${data.teachers.length} teachers...`);
@@ -54,10 +85,10 @@ async function seed() {
     }
   }
 
-  // Seed students with their 8-char codes
-  console.log(`\n🎓 Seeding ${data.students.length} students with codes...`);
+  // Seed students
+  console.log(`\n🎓 Seeding ${data.students.length} students...`);
   for (const student of data.students) {
-    // Also update in classes subcollection
+    // Update in classes subcollection (keeps studentId as doc ID there — that's fine)
     const studentRef = doc(
       db,
       `classes/${student.classId}/students`,
@@ -69,8 +100,8 @@ async function seed() {
       code: student.code,
     }, { merge: true });
 
-    // And in top-level students collection for auth lookup
-    // Use a readable custom ID: e.g. "g6_mustapha-el-glaoui"
+    // Top-level students collection: use readable custom ID
+    // e.g. "g6_mustapha-el-glaoui"
     const docId = `${student.classId.toLowerCase()}_${toSlug(student.name)}`;
     const authRef = doc(db, 'students', docId);
     await setDoc(authRef, {
@@ -82,15 +113,15 @@ async function seed() {
     console.log(`  ✅ ${student.name} (${student.classId}) → ${student.code}  [ID: ${docId}]`);
   }
 
-  console.log('\n✅ Seeding complete!');
-  console.log('\n🔑 Test credentials:');
-  console.log(`  Teacher code:  TEACHER1`);
-  console.log(`  Student code:  STUDENT1`);
-  console.log(`  Admin code:    ADMIN123`);
+  console.log('\n✅ All done! Firebase console now shows readable student names as document IDs.');
+  console.log('\n🔑 Login credentials unchanged:');
+  console.log(`  Teacher:  TEACHER1`);
+  console.log(`  Student:  STUDENT1`);
+  console.log(`  Admin:    ADMIN123`);
   process.exit(0);
 }
 
-seed().catch(err => {
-  console.error('❌ Seeding failed:', err);
+run().catch(err => {
+  console.error('❌ Failed:', err);
   process.exit(1);
 });
