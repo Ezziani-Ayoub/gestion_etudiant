@@ -16,6 +16,7 @@ export interface SessionUser {
 export interface AuthUser {
   name: string;
   role: UserRole;
+  code?: string;
   classId?: string;
   studentId?: string;
   module?: string;

@@ -54,6 +54,7 @@ export async function loginAction(role: UserRole, code: string): Promise<{ error
   cookieStore.set(CLIENT_SESSION_COOKIE, JSON.stringify({
     name: userDoc.name,
     role,
+    code: trimmedCode,
     classId: userDoc.classId,
     studentId: userDoc.studentId,
     module: userDoc.module,
