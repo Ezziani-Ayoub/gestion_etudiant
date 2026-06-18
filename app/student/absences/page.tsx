@@ -107,24 +107,25 @@ export default function StudentAbsencesPage() {
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>HD</th>
-                  <th>HF</th>
-                  <th>Cours</th>
-                  <th>Professeur</th>
-                  <th>Status</th>
-                  <th>Justif.</th>
+                  <th>Statut</th>
+                  <th>Justifiée</th>
                 </tr>
               </thead>
               <tbody>
                 {absences.map((row) => (
                   <tr key={row.date}>
-                    <td>{new Date(row.date).toLocaleDateString("fr-FR")}</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
+                    <td>
+                      {new Date(row.date).toLocaleDateString("fr-FR", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </td>
                     <td style={{ color: "#dc2626", fontWeight: 600 }}>{row.status}</td>
-                    <td>{row.justified ? "Oui" : "-"}</td>
+                    <td style={{ color: row.justified ? "#059669" : "#6b7280", fontWeight: 600 }}>
+                      {row.justified ? "Oui ✓" : "Non"}
+                    </td>
                   </tr>
                 ))}
               </tbody>

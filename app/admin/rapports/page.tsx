@@ -83,17 +83,21 @@ export default function RapportsPage() {
     const fetchRapports = async () => {
       try {
         const rapportsRef = collection(db, "rapports");
-        const ordered = orderBy("timestamp", "desc");
 
         const q = isTeacher && userCode
-          ? query(rapportsRef, where("teacherCode", "==", userCode), ordered)
-          : query(rapportsRef, ordered);
+          ? query(rapportsRef, where("teacherCode", "==", userCode))
+          : query(rapportsRef, orderBy("timestamp", "desc"));
 
         const snap = await getDocs(q);
         const data = snap.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Rapport[];
+
+        if (isTeacher && userCode) {
+          data.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+        }
+
         setRapports(data);
       } catch (error) {
         console.error("Erreur lors de la récupération des rapports:", error);

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import styles from "../student/page.module.css";
@@ -145,9 +144,6 @@ export default function AdminDashboardPage() {
             <h1 className={styles.title}>Tableau de bord Administration</h1>
             <p className={styles.subtitle}>Rechercher étudiants et professeurs</p>
           </div>
-          <Link href="/admin/teachers" className={styles.primaryBtn} style={{ alignSelf: "center" }}>
-            Gérer les modules des professeurs
-          </Link>
         </div>
 
         <div className={styles.section}>

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import DashboardLayout from "../../../components/DashboardLayout";
 import styles from "../page.module.css";
 import type { AuthUser } from "../../../lib/auth";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { getStudentGradesFromLocalStorage, type GradesMap } from "../../../lib/local-grades";
+import { getDoc, doc } from "firebase/firestore";
+import { db } from "../../../lib/firebase";
 
 const MODULES = [
   "Mathématiques",
@@ -31,15 +32,30 @@ function getClientSession(): AuthUser | null {
 
 export default function StudentGrades() {
   const [user] = useState<AuthUser | null>(() => getClientSession());
-  const [grades] = useState<GradesMap>(() => {
-    const session = getClientSession();
-    if (session?.classId && session?.studentId) {
-      const fromStudentId = getStudentGradesFromLocalStorage(session.classId, session.studentId);
-      return fromStudentId;
-    }
-    return {};
-  });
+  const [grades, setGrades] = useState<Record<string, { control?: string; exam?: string }>>({});
+  const [loading, setLoading] = useState(true);
   const pdfRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchGrades = async () => {
+      if (!user?.classId || !user?.studentId) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const studentRef = doc(db, `classes/${user.classId}/students`, user.studentId);
+        const snap = await getDoc(studentRef);
+        if (snap.exists()) {
+          setGrades(snap.data().grades || {});
+        }
+      } catch (error) {
+        console.error("Error fetching grades:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGrades();
+  }, [user?.classId, user?.studentId]);
 
   const calculateAverage = (controlStr?: string, examStr?: string) => {
     const control = parseFloat(controlStr || "");

@@ -122,7 +122,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 return <div key={index} className={styles.navSectionDivider} />;
               }
 
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const isActive = pathname === item.href;
               return (
                 <Link
                   key={item.href}
