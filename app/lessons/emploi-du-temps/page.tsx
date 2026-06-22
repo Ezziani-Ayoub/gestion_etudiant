@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import styles from "../lessons/page.module.css";
-import DashboardLayout from "../../components/DashboardLayout";
-import { db } from "../../lib/firebase";
+import styles from "../page.module.css";
+import DashboardLayout from "../../../components/DashboardLayout";
+import { db } from "../../../lib/firebase";
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
-import type { AuthUser } from "../../lib/auth";
+import type { AuthUser } from "../../../lib/auth";
 
 interface Schedule {
   id: string;

@@ -31,7 +31,8 @@ export default function StudentAbsencesPage() {
 
   useEffect(() => {
     const fetchAbsences = async () => {
-      if (!user?.classId || !user.studentId) {
+      const studentId = user?.studentId;
+      if (!user?.classId || !studentId) {
         setLoading(false);
         return;
       }
@@ -47,13 +48,13 @@ export default function StudentAbsencesPage() {
               records?: Record<string, string>;
               justified?: Record<string, boolean>;
             };
-            const status = data.records?.[user.studentId];
+            const status = data.records?.[studentId];
             if (status !== "Absent") return null;
 
             return {
               date: docSnap.id,
               status: "Absent",
-              justified: Boolean(data.justified?.[user.studentId]),
+              justified: Boolean(data.justified?.[studentId]),
             } as AttendanceDoc;
           })
           .filter((row): row is AttendanceDoc => row !== null)
