@@ -2,18 +2,38 @@
   "teachers": [
     {
       "code": "TEACHER1",
-      "name": "Professeur G4",
-      "module": "Mathématiques"
+      "name": "Badia",
+      "module": "Mathematiques"
     },
     {
-      "code": "T5GBKVRW",
-      "name": "Professeur G6",
+      "code": "DR8YF2KZ",
+      "name": "Drayef",
+      "module": "Francais"
+    },
+    {
+      "code": "MKH3NT9R",
+      "name": "Mkhanter",
       "module": "Physique-Chimie"
     },
     {
-      "code": "GLCWKB9E",
-      "name": "Professeur G8",
-      "module": "Français"
+      "code": "JM4LSV7T",
+      "name": "Jamal",
+      "module": "SVT"
+    },
+    {
+      "code": "JML5ANG8",
+      "name": "Jamila",
+      "module": "Anglais"
+    },
+    {
+      "code": "BJM4HG2X",
+      "name": "Boujmaa",
+      "module": "Histoire-Geographie"
+    },
+    {
+      "code": "KML9INF3",
+      "name": "Kamal",
+      "module": "Informatique"
     }
   ],
   "students": [

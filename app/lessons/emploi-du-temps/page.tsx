@@ -34,6 +34,7 @@ const CLASSES = ["G4", "G6", "G8"];
 export default function SchedulePage() {
   const session = getClientSession();
   const teacherModule = session?.module || "";
+  const teacherCode = session?.code || "";
 
   const [selectedClass, setSelectedClass] = useState<"G4" | "G6" | "G8">("G4");
   const [schedule, setSchedule] = useState<Schedule[]>([]);
@@ -49,7 +50,6 @@ export default function SchedulePage() {
 
   useEffect(() => {
     if (!teacherModule) {
-      setLoading(false);
       return;
     }
 
@@ -58,7 +58,7 @@ export default function SchedulePage() {
       try {
         const scheduleRef = collection(
           db,
-          `teachers_schedule/${teacherModule}/classes/${selectedClass}`
+          `teachers_schedule/${teacherCode}/classes/${selectedClass}/slots`
         );
         const snap = await getDocs(scheduleRef);
         const scheduleList = snap.docs.map((d) => ({
@@ -85,7 +85,7 @@ export default function SchedulePage() {
     };
 
     fetchSchedule();
-  }, [selectedClass, teacherModule]);
+  }, [selectedClass, teacherCode, teacherModule]);
 
   const handleAddSchedule = async () => {
     if (!formData.day || !formData.startTime || !formData.endTime) {
@@ -111,7 +111,7 @@ export default function SchedulePage() {
 
       const scheduleRef = collection(
         db,
-        `teachers_schedule/${teacherModule}/classes/${selectedClass}`
+        `teachers_schedule/${teacherCode}/classes/${selectedClass}/slots`
       );
       const docRef = await addDoc(scheduleRef, newSchedule);
 
@@ -144,7 +144,7 @@ export default function SchedulePage() {
       await deleteDoc(
         doc(
           db,
-          `teachers_schedule/${teacherModule}/classes/${selectedClass}`,
+          `teachers_schedule/${teacherCode}/classes/${selectedClass}/slots`,
           scheduleId
         )
       );
@@ -190,8 +190,8 @@ export default function SchedulePage() {
           >
             <h3 style={{ margin: "0 0 0.5rem 0" }}>Module non configuré</h3>
             <p>
-              Votre module n'a pas été défini. Veuillez contacter
-              l'administration pour configurer votre matière.
+              Votre module n&apos;a pas été défini. Veuillez contacter
+              l&apos;administration pour configurer votre matière.
             </p>
           </div>
         ) : (
@@ -346,11 +346,11 @@ export default function SchedulePage() {
 
             {loading ? (
               <div className={styles.loadingState}>
-                Chargement de l'emploi du temps...
+                Chargement de l&apos;emploi du temps...
               </div>
             ) : schedule.length === 0 ? (
               <div className={styles.emptyState}>
-                Aucun créneau n'a été défini pour cette classe.
+                Aucun créneau n&apos;a été défini pour cette classe.
               </div>
             ) : (
               <div

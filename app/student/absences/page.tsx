@@ -39,6 +39,7 @@ export default function StudentAbsencesPage() {
 
       setLoading(true);
       try {
+        const studentId = user.studentId;
         const attendanceRef = collection(db, `classes/${user.classId}/attendance`);
         const snap = await getDocs(attendanceRef);
 
