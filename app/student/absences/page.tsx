@@ -31,16 +31,16 @@ export default function StudentAbsencesPage() {
 
   useEffect(() => {
     const fetchAbsences = async () => {
+      const classId = user?.classId;
       const studentId = user?.studentId;
-      if (!user?.classId || !studentId) {
+      if (!classId || !studentId) {
         setLoading(false);
         return;
       }
 
       setLoading(true);
       try {
-        const studentId = user.studentId;
-        const attendanceRef = collection(db, `classes/${user.classId}/attendance`);
+        const attendanceRef = collection(db, `classes/${classId}/attendance`);
         const snap = await getDocs(attendanceRef);
 
         const rows = snap.docs

@@ -15,6 +15,7 @@ interface Rapport {
   status: "on_hold" | "approved" | "rejected";
   teacherName?: string;
   teacherCode?: string;
+  timestamp?: number;
 }
 
 interface StudentOption {
@@ -61,10 +62,15 @@ export default function RapportsPage() {
       try {
         const snap = await getDocs(collection(db, "students"));
         const loadedStudents = snap.docs
-          .map((docSnap) => ({
-            id: docSnap.id,
-            ...(docSnap.data() as { name?: string; classId?: string; code?: string }),
-          }))
+          .map((docSnap) => {
+            const data = docSnap.data() as { name?: string; classId?: string; code?: string };
+            return {
+              id: docSnap.id,
+              name: data.name || "",
+              classId: data.classId,
+              code: data.code,
+            };
+          })
           .sort((a, b) => a.name.localeCompare(b.name));
         setStudents(loadedStudents);
       } catch (error) {
@@ -83,17 +89,20 @@ export default function RapportsPage() {
     const fetchRapports = async () => {
       try {
         const rapportsRef = collection(db, "rapports");
-        const ordered = orderBy("timestamp", "desc");
 
         const q = isTeacher && userCode
-          ? query(rapportsRef, where("teacherCode", "==", userCode), ordered)
-          : query(rapportsRef, ordered);
+          ? query(rapportsRef, where("teacherCode", "==", userCode))
+          : query(rapportsRef);
 
         const snap = await getDocs(q);
         const data = snap.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Rapport[];
+        
+        // Sort in memory by timestamp descending to avoid composite index requirements
+        data.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        
         setRapports(data);
       } catch (error) {
         console.error("Erreur lors de la récupération des rapports:", error);
